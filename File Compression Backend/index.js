@@ -2,6 +2,7 @@ const express = require("express");
 const imageRoute = require("./route/imageProcess.routes");
 const connectDb = require("./config/connectDb");
 const cors = require("cors");
+require("dotenv").config();
 const app = express();
 
 app.use(cors());

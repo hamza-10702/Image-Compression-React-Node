@@ -46,11 +46,11 @@ async function sendMail(data) {
   transporter
     .sendMail(message)
     .then((msg) => {
-      console.log("Mail Message", msg);
+      // console.log("Mail Message", msg);
       return;
     })
     .catch((error) => {
-      console.log(error);
+      //   console.log(error);
       return;
     });
 }

@@ -8,9 +8,9 @@ const { myQueue } = require("../constant");
 const io = require("../index");
 
 cloudinaryConfig.config({
-  cloud_name: "dj3pbrv12",
-  api_key: "761173687514995",
-  api_secret: "SgKwvjB7KCZ1Ijaik9VRP9OQiFw",
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.APIKEY,
+  api_secret: process.env.API_SECRET,
 });
 
 // =============================================================================
@@ -25,7 +25,7 @@ const compressImage = async (req, res) => {
       myQueue.add("processingImages", { imageData, email });
       const isuserExist = await imageModel.findOne({ email });
       if (isuserExist) {
-        console.log({ message: "User already Exist" });
+        //   console.log({ message: "User already Exist" });
       } else {
         const newUserData = new imageModel({
           email,
@@ -33,7 +33,7 @@ const compressImage = async (req, res) => {
         });
 
         const newUser = await newUserData.save();
-        console.log("New User Created", newUser);
+        // console.log("New User Created", newUser);
       }
 
       return res.json({
@@ -96,6 +96,11 @@ const saveImagesToCloud = async (images) => {
   return allImages;
 };
 const imageProcessingAsync = async (data) => {
+  console.log(
+    "-----------------------------------------------------------------------------------------------------------------------------------------",
+    process.env.CLOUD_NAME
+  );
+
   const { imageData, email } = data;
   const links = await saveImagesToCloud(imageData);
 
@@ -108,9 +113,9 @@ const imageProcessingAsync = async (data) => {
           { $push: { links: links } },
           { new: true }
         );
-        console.log({ urls: updateUser });
+        // console.log({ urls: updateUser });
       } else {
-        console.log({ message: "No User Found" });
+        // console.log({ message: "No User Found" });
       }
 
       return {
@@ -118,7 +123,7 @@ const imageProcessingAsync = async (data) => {
       };
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
   }
 };
 
@@ -151,7 +156,7 @@ const getImagesFromDatabase = async (email) => {
       return null;
     }
   } catch (error) {
-    console.log(error);
+    // console.log(error);
   }
 };
 
@@ -171,11 +176,11 @@ myQueue.process("processingImages", (job) => {
 });
 // Listen for completed tasks
 myQueue.on("completed", async (job) => {
-  console.log("Task completed:", job.data);
+  // console.log("Task completed:", job.data);
   const userData = await getImagesFromDatabase(job?.data?.email);
   if (userData) {
     const urls = userData?.links?.map((image) => image.url);
-    console.log({ email: userData?.email, urls });
+    //  console.log({ email: userData?.email, urls });
     sendMail({ email: userData?.email, urls });
   }
 });
@@ -184,62 +189,6 @@ myQueue.on("completed", async (job) => {
 myQueue.on("failed", (job, error) => {
   console.log("Task failed:", job.data, error);
 });
-
-// const compressImage = async (req, res) => {
-//   let allCompressImages = "";
-//   const directory = path.resolve("src/images");
-
-//   fs.readdir(directory, async (err, files) => {
-//     allCompressImages = files[0];
-//     if (err) throw err;
-
-//     for (const file of files) {
-//       const filePath = path.join(directory, file);
-//       try {
-//         const buffer = await fs.promises.readFile(filePath);
-//         const compress = await sharp(buffer).resize(1000).png({ quality: 90 });
-//         const compressedBuffer = await compress.toBuffer();
-
-//         const compressedFilePath = path.join(directory, "compressed_" + file);
-
-//         fs.writeFile(compressedFilePath, compressedBuffer, (err) => {
-//           if (err) {
-//             console.error("Error writing compressed file:", err);
-//           } else {
-//             console.log(
-//               "Compressed file successfully written:",
-//               compressedFilePath
-//             );
-//           }
-//         });
-//         // await fs.unlink(path.join(directory, filename));
-
-//         console.log("Done");
-//         // const compressedBuffer = await compress.toBuffer();
-//         // const stream = streamifier.createReadStream(compressedBuffer);
-
-//         // const dataUrl = `data:image/png;base64,${compressedBuffer.toString(
-//         //   "base64"
-//         // )}`;
-
-//         // console.log(dataUrl);
-//         // allCompressImages.push(dataUrl);
-//       } catch (error) {
-//         console.error(`Error compressing image ${file}:`, error);
-//       }
-//       // cloudinary.uploader
-//       //   .upload(allCompressImages, { resource_type: "image" })
-//       //   .then((result) => {
-//       //     console.log("Image uploaded to Cloudinary:", result);
-//       //   })
-//       //   .catch((error) => {
-//       //     console.error("Error uploading image to Cloudinary:", error);
-//       //   });
-//     }
-
-//     return res.json({ msg: "success", images: allCompressImages });
-//   });
-// };
 
 module.exports = {
   compressImage,
